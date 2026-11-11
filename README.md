@@ -14,11 +14,11 @@ pip install -e ".[dev]"
 
 ## Usage
 
-Put `OPENAI_API_KEY` in a `.env` file in the working directory, export it, or pass `--api-key`. A value already set in the environment is left as-is. The default endpoint is the public OpenAI API. Point `--base-url`, `--chat-model`, and `--embed-model` at any OpenAI-compatible server.
+Put `DEEPSEEK_API_KEY` in a `.env` file in the working directory, export it, or pass `--api-key`. A value already set in the environment is left as-is. The default endpoint is the DeepSeek API, which speaks the OpenAI chat format. Point `--base-url` and `--chat-model` at any compatible server.
 
 ```bash
 # .env
-OPENAI_API_KEY=sk-...
+DEEPSEEK_API_KEY=sk-...
 ```
 
 ```bash
@@ -31,12 +31,11 @@ Another endpoint:
 ```bash
 agent-debate verify "The current Eddystone Lighthouse was first lit in 1882." \
   --kb ./examples/kb \
-  --base-url "$OPENAI_BASE_URL" \
-  --chat-model "$OPENAI_CHAT_MODEL" \
-  --embed-model "$OPENAI_EMBED_MODEL"
+  --base-url "$DEEPSEEK_BASE_URL" \
+  --chat-model "$DEEPSEEK_CHAT_MODEL"
 ```
 
-The knowledge base is a directory of `.txt`, `.md`, and `.markdown` files, read recursively. Other files are skipped. Embeddings are cached in `.cache/agent-debate/` in the working directory.
+The knowledge base is a directory of `.txt`, `.md`, and `.markdown` files, read recursively. Other files are skipped. DeepSeek does not provide an embeddings API, so retrieval uses a local token hash. Those vectors are cached in `.cache/agent-debate/` in the working directory. `--embed-model` only names that cache.
 
 Each turn prints as it finishes. The verdict is `true`, `false`, or `uncertain`.
 
@@ -50,9 +49,9 @@ agent-debate verify "Smeaton designed the lighthouse that was first lit in 1882.
 
 | Flag | Default |
 | --- | --- |
-| `--base-url` | `https://api.openai.com/v1` |
-| `--chat-model` | `gpt-4o-mini` |
-| `--embed-model` | `text-embedding-3-small` |
+| `--base-url` | `https://api.deepseek.com` |
+| `--chat-model` | `deepseek-flash` |
+| `--embed-model` | `local-hash` |
 | `--top-k` | `4` passages per search |
 | `--max-searches` | `3` searches per turn |
 | `--cache-dir` | `.cache/agent-debate` |

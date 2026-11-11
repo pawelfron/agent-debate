@@ -24,11 +24,13 @@ from agent_debate.knowledge import (
     KnowledgeError,
     default_cache_dir,
     format_passages,
+    local_embed,
 )
 
-DEFAULT_BASE_URL = "https://api.openai.com/v1"
-DEFAULT_CHAT_MODEL = "gpt-4o-mini"
-DEFAULT_EMBED_MODEL = "text-embedding-3-small"
+DEFAULT_BASE_URL = "https://api.deepseek.com"
+DEFAULT_CHAT_MODEL = "deepseek-flash"
+DEFAULT_EMBED_MODEL = "local-hash"
+LOCAL_EMBED_URL = "local"
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -50,7 +52,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     verify.add_argument(
         "--api-key",
         default=None,
-        help="API key (default: OPENAI_API_KEY from the environment or a .env file)",
+        help="API key (default: DEEPSEEK_API_KEY from the environment or a .env file)",
     )
     verify.add_argument(
         "--base-url",
@@ -65,7 +67,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     verify.add_argument(
         "--embed-model",
         default=DEFAULT_EMBED_MODEL,
-        help=f"Embedding model used for retrieval (default: {DEFAULT_EMBED_MODEL})",
+        help=(
+            "Local embedding id stored in the retrieval cache "
+            f"(default: {DEFAULT_EMBED_MODEL}). Retrieval does not call the API."
+        ),
     )
     verify.add_argument(
         "--top-k",
@@ -106,10 +111,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     load_dotenv(Path.cwd() / ".env")
-    api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
+    api_key = args.api_key or os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
         print(
-            "Missing API key. Set OPENAI_API_KEY, add it to .env, or pass --api-key.",
+            "Missing API key. Set DEEPSEEK_API_KEY, add it to .env, or pass --api-key.",
             file=sys.stderr,
         )
         return 1
@@ -127,7 +132,6 @@ def main(argv: list[str] | None = None) -> int:
             client=client,
             chat_model=args.chat_model,
             embed_model=args.embed_model,
-            base_url=args.base_url,
             top_k=args.top_k,
             max_searches=args.max_searches,
             cache_dir=args.cache_dir,
@@ -157,7 +161,6 @@ def verify(
     client,
     chat_model: str,
     embed_model: str,
-    base_url: str,
     top_k: int = 4,
     max_searches: int = 3,
     cache_dir: Path | None = None,
@@ -165,9 +168,9 @@ def verify(
 ) -> DebateResult:
     knowledge = KnowledgeBase(
         kb_dir,
-        _openai_embedder(client, embed_model),
+        local_embed,
         embed_model=embed_model,
-        base_url=base_url,
+        base_url=LOCAL_EMBED_URL,
         cache_dir=cache_dir if cache_dir is not None else default_cache_dir(),
         top_k=top_k,
     )
@@ -206,15 +209,6 @@ def render_verdict(verdict: Verdict) -> str:
 
 def _print_turn(turn: Turn) -> None:
     print(render_turn(turn))
-
-
-def _openai_embedder(client, model: str):
-    def embed(texts: list[str]) -> list[list[float]]:
-        response = client.embeddings.create(model=model, input=texts)
-        ordered = sorted(response.data, key=lambda item: item.index)
-        return [list(item.embedding) for item in ordered]
-
-    return embed
 
 
 def _positive_int(value: str) -> int:

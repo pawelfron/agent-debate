@@ -66,18 +66,18 @@ class FakeClient:
         )
 
 
-def test_parse_args_uses_openai_defaults():
+def test_parse_args_uses_deepseek_defaults():
     args = parse_args(["verify", "A claim.", "--kb", "examples/kb"])
-    assert args.base_url == "https://api.openai.com/v1"
-    assert args.chat_model == "gpt-4o-mini"
-    assert args.embed_model == "text-embedding-3-small"
+    assert args.base_url == "https://api.deepseek.com"
+    assert args.chat_model == "deepseek-flash"
+    assert args.embed_model == "local-hash"
     assert args.top_k == 4
     assert args.max_searches == 3
     assert args.output is None
 
 
 def test_main_requires_an_api_key(tmp_path, monkeypatch, capsys):
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     monkeypatch.chdir(tmp_path)
     code = main(["verify", "A claim.", "--kb", str(tmp_path)])
     assert code == 1
@@ -85,9 +85,9 @@ def test_main_requires_an_api_key(tmp_path, monkeypatch, capsys):
 
 
 def test_main_reads_the_api_key_from_dotenv(tmp_path, monkeypatch, capsys):
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     monkeypatch.chdir(tmp_path)
-    (tmp_path / ".env").write_text("OPENAI_API_KEY=sk-from-dotenv\n", encoding="utf-8")
+    (tmp_path / ".env").write_text("DEEPSEEK_API_KEY=sk-from-dotenv\n", encoding="utf-8")
     kb = tmp_path / "kb"
     kb.mkdir()
     (kb / "note.md").write_text(
@@ -116,12 +116,13 @@ def test_main_reads_the_api_key_from_dotenv(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     assert code == 0
     assert seen["api_key"] == "sk-from-dotenv"
+    assert seen["base_url"] == "https://api.deepseek.com"
     assert "sk-from-dotenv" not in captured.out
     assert "sk-from-dotenv" not in captured.err
 
 
 def test_main_rejects_a_missing_knowledge_base(tmp_path, monkeypatch, capsys):
-    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-secret")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test-secret")
     code = main(["verify", "A claim.", "--kb", str(tmp_path / "missing")])
     assert code == 1
     assert "sk-test-secret" not in capsys.readouterr().err
@@ -136,7 +137,7 @@ def test_main_prints_transcript_and_writes_a_report_without_the_key(
         "The current tower was first lit in 1882.", encoding="utf-8"
     )
     report = tmp_path / "report.json"
-    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-secret")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test-secret")
     monkeypatch.setattr("agent_debate.cli.OpenAI", lambda **kwargs: FakeClient())
 
     code = main(

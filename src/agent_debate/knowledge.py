@@ -17,6 +17,8 @@ DEFAULT_CHUNK_SIZE = 1200
 DEFAULT_OVERLAP = 200
 SUPPORTED_SUFFIXES = {".txt", ".md", ".markdown"}
 EMBED_BATCH_SIZE = 64
+LOCAL_EMBED_DIM = 256
+_TOKEN = re.compile(r"[a-z0-9]+")
 
 EmbedFn = Callable[[list[str]], Sequence[Sequence[float]]]
 WarnFn = Callable[[str], None]
@@ -47,6 +49,18 @@ class _Chunk:
 
 def default_cache_dir() -> Path:
     return Path.cwd() / ".cache" / "agent-debate"
+
+
+def local_embed(texts: list[str]) -> list[list[float]]:
+    """Hash tokens into a fixed vector. DeepSeek does not serve embeddings."""
+    vectors = []
+    for text in texts:
+        vector = np.zeros(LOCAL_EMBED_DIM, dtype=np.float64)
+        for token in _TOKEN.findall(text.lower()):
+            digest = hashlib.sha256(token.encode("utf-8")).digest()
+            vector[digest[0] % LOCAL_EMBED_DIM] += 1.0
+        vectors.append(vector.tolist())
+    return vectors
 
 
 def default_warn(message: str) -> None:
