@@ -76,10 +76,48 @@ def test_parse_args_uses_openai_defaults():
     assert args.output is None
 
 
-def test_main_requires_an_api_key(tmp_path, monkeypatch):
+def test_main_requires_an_api_key(tmp_path, monkeypatch, capsys):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.chdir(tmp_path)
     code = main(["verify", "A claim.", "--kb", str(tmp_path)])
     assert code == 1
+    assert ".env" in capsys.readouterr().err
+
+
+def test_main_reads_the_api_key_from_dotenv(tmp_path, monkeypatch, capsys):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / ".env").write_text("OPENAI_API_KEY=sk-from-dotenv\n", encoding="utf-8")
+    kb = tmp_path / "kb"
+    kb.mkdir()
+    (kb / "note.md").write_text(
+        "The current tower was first lit in 1882.", encoding="utf-8"
+    )
+    seen: dict = {}
+
+    def fake_openai(**kwargs):
+        seen.update(kwargs)
+        return FakeClient()
+
+    monkeypatch.setattr("agent_debate.cli.OpenAI", fake_openai)
+    code = main(
+        [
+            "verify",
+            "The tower was first lit in 1882.",
+            "--kb",
+            str(kb),
+            "--cache-dir",
+            str(tmp_path / "cache"),
+            "--max-searches",
+            "0",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert seen["api_key"] == "sk-from-dotenv"
+    assert "sk-from-dotenv" not in captured.out
+    assert "sk-from-dotenv" not in captured.err
 
 
 def test_main_rejects_a_missing_knowledge_base(tmp_path, monkeypatch, capsys):

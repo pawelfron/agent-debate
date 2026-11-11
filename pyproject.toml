@@ -9,6 +9,7 @@ authors = [{ name = "Paweł Froń" }]
 dependencies = [
     "openai>=1.40",
     "numpy",
+    "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]

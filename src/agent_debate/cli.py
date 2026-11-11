@@ -8,6 +8,7 @@ import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
 
 from agent_debate.debate import (
@@ -49,7 +50,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     verify.add_argument(
         "--api-key",
         default=None,
-        help="API key (default: the OPENAI_API_KEY environment variable)",
+        help="API key (default: OPENAI_API_KEY from the environment or a .env file)",
     )
     verify.add_argument(
         "--base-url",
@@ -104,9 +105,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Unknown command: {args.command}", file=sys.stderr)
         return 1
 
+    load_dotenv(Path.cwd() / ".env")
     api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        print("Missing API key. Set OPENAI_API_KEY or pass --api-key.", file=sys.stderr)
+        print(
+            "Missing API key. Set OPENAI_API_KEY, add it to .env, or pass --api-key.",
+            file=sys.stderr,
+        )
         return 1
 
     kb_dir = args.kb.expanduser().resolve()

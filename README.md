@@ -14,7 +14,12 @@ pip install -e ".[dev]"
 
 ## Usage
 
-Set `OPENAI_API_KEY`, or pass `--api-key`. The default endpoint is the public OpenAI API. Point `--base-url`, `--chat-model`, and `--embed-model` at any OpenAI-compatible server.
+Put `OPENAI_API_KEY` in a `.env` file in the working directory, export it, or pass `--api-key`. A value already set in the environment is left as-is. The default endpoint is the public OpenAI API. Point `--base-url`, `--chat-model`, and `--embed-model` at any OpenAI-compatible server.
+
+```bash
+# .env
+OPENAI_API_KEY=sk-...
+```
 
 ```bash
 agent-debate verify "The current Eddystone Lighthouse was first lit in 1882." \
