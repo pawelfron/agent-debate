@@ -22,14 +22,14 @@ DEEPSEEK_API_KEY=sk-...
 ```
 
 ```bash
-agent-debate verify "The current Eddystone Lighthouse was first lit in 1882." \
+agent-debate verify "On 4 June 1904 the Mill Lane depot was drawing town water that had already passed the sand beds." \
   --kb ./examples/kb
 ```
 
 Another endpoint:
 
 ```bash
-agent-debate verify "The current Eddystone Lighthouse was first lit in 1882." \
+agent-debate verify "Owen Hale designed the dam at the upper intake." \
   --kb ./examples/kb \
   --base-url "$DEEPSEEK_BASE_URL" \
   --chat-model "$DEEPSEEK_CHAT_MODEL"
@@ -40,7 +40,7 @@ The knowledge base is a directory of `.txt`, `.md`, and `.markdown` files, read 
 Each turn prints as it finishes. The verdict is `true`, `false`, or `uncertain`.
 
 ```bash
-agent-debate verify "Smeaton designed the lighthouse that was first lit in 1882." \
+agent-debate verify "The dam core contains no Pethwick stone." \
   --kb ./examples/kb \
   --output report.json
 ```
@@ -56,7 +56,7 @@ agent-debate verify "Smeaton designed the lighthouse that was first lit in 1882.
 | `--max-searches` | `3` searches per turn |
 | `--cache-dir` | `.cache/agent-debate` |
 
-The sample documents in `examples/kb` describe the Eddystone Lighthouse, Plymouth Hoe, and an unrelated library note.
+The sample documents in `examples/kb` are fictional papers about the Calderbridge reservoir, the Mill Lane tram depot, and a parish reading room. Names, dates, and sums are local to those papers, so a claim is not settled by common knowledge. No file states the sample claims as a sentence. One follows only by joining the tramways card with the filtration memo. One is aimed at a person the newspaper praises for a different structure. One meets a witness, a yard-book finding, and an explicit note that the core was never opened. A further claim the papers leave open is that the borough council, rather than the Waterworks Company, paid M. Pell & Sons the contract sum: the subscription minute promised in 1896 is not among the papers.
 
 ## Tests
 
